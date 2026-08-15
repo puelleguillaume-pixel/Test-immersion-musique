@@ -97,6 +97,22 @@ plutôt que deviné (le champ est optionnel, l'UI l'affiche seulement quand il e
 *"BESOIN DE TOI"* (feat. FAYV) est marqué *(Non publié)* sur Genius et n'a délibérément pas été
 ajouté — à inclure quand l'artiste décide de l'annoncer.
 
+La page Collabs affiche ces 9 morceaux dans un carrousel 3D en CSS pur
+(`src/components/ui/image-stream-hero.tsx`). Les vraies pochettes Genius ne nous appartiennent
+pas et ne sont pas redistribuables sans l'accord de l'ayant droit, donc chaque carte y est un
+dégradé généré à partir de la couleur d'accent du morceau (`src/lib/coverPlaceholder.ts`) plutôt
+qu'une image copiée depuis Genius. À remplacer par les vraies pochettes si l'artiste a les droits
+de les afficher.
+
+### Composants au format shadcn
+
+`src/components/ui/` suit la convention shadcn (un composant = un fichier, style copié-collé plutôt
+qu'installé en dépendance) même si le projet n'a pas été scaffoldé avec le CLI shadcn — il a déjà
+tout ce qu'il faut pour l'accueillir : TypeScript strict, Tailwind, et ce dossier. `src/lib/utils.ts`
+ré-exporte le `cn` du projet (`src/lib/cn.ts`) sous le nom que ces composants attendent par
+convention (`@/lib/utils`), pour que de nouveaux composants shadcn puissent être copiés-collés
+tels quels sans réécrire leurs imports.
+
 Reste en placeholder : `src/data/gallery.ts` (dégradés de couleur en attendant de vraies photos
 studio/scène/portraits). Les packs du catalogue de démo (`src/data/packs.ts`) n'ont pas de
 fichier audio — une fois `/admin` en service (voir plus bas), l'upload s'y fait directement ; en
