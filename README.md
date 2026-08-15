@@ -57,15 +57,23 @@ Pour ajouter un nouveau pack/collab : une ligne dans la table Supabase suffit, a
 front nécessaire (`getPacks()` / `getCollabs()` retombent sur les seeds locales uniquement si
 Supabase n'est pas configuré ou renvoie une liste vide).
 
-## ⚠️ Données de démonstration à remplacer avant mise en ligne
+## ⚠️ Données de démonstration restantes
 
-Cette session n'a pas d'accès réseau à Genius, donc `src/data/collabs.ts` contient des noms
-d'artistes **inventés** (pour ne pas afficher de fausses collaborations avec de vrais artistes)
-— à remplacer par les crédits vérifiés depuis <https://genius.com/artists/Naifos> avant de
-publier le site. Idem pour `src/data/gallery.ts` (dégradés de couleur en attendant de vraies
-photos) et pour les `audioUrl` des packs (vides — brancher Supabase Storage ou tout CDN audio
-pour activer la lecture réelle ; sans URL, chaque lecteur affiche un aperçu visuel généré et le
-bouton play reste désactivé plutôt que de mentir sur le contenu).
+`src/data/collabs.ts` contient désormais les vraies collaborations (9 morceaux — Ninho, Kaneki,
+HOUDI & Anyme023, Emkal ×2, Niro ×2, Yaro, Béné (FRA)), fournies par l'artiste depuis la page
+<https://genius.com/artists/Naifos>. C'est une liste **partielle** — Genius affiche "Afficher
+toutes les chansons de Naifos", donc il y en a d'autres à ajouter au fil de l'eau. Les années de
+sortie n'étaient pas visibles sur la capture fournie, donc `year` est volontairement laissé vide
+plutôt que deviné (le champ est optionnel, l'UI l'affiche seulement quand il est renseigné).
+*"BESOIN DE TOI"* (feat. FAYV) est marqué *(Non publié)* sur Genius et n'a délibérément pas été
+ajouté — à inclure quand l'artiste décide de l'annoncer.
+
+Restent en placeholder : `src/data/gallery.ts` (dégradés de couleur en attendant de vraies
+photos studio/scène/portraits) et les `audioUrl` des packs du catalogue (vides — brancher
+Supabase Storage ou tout CDN audio pour activer la lecture réelle ; sans URL, chaque lecteur
+affiche un aperçu visuel généré et le bouton play reste désactivé plutôt que de mentir sur le
+contenu). Le mur des collabs a aussi ce comportement : sans `audioUrl` par morceau, le
+mini-player s'ouvre mais la lecture reste désactivée.
 
 ## Structure
 

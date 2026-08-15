@@ -57,14 +57,14 @@ export function CollabWall({ collabs }: { collabs: Collab[] }) {
               />
               <div className="p-6">
                 <p className="font-mono text-xs uppercase tracking-[0.25em] text-cuir-bright">
-                  {selected.year} · {selected.role}
+                  {[selected.year, selected.role].filter(Boolean).join(" · ")}
                 </p>
                 <h3 className="mt-1 font-display text-2xl font-semibold text-ivoire">{selected.artist}</h3>
                 <p className="text-brume-pale">{selected.track}</p>
                 <WaveformPlayer
                   id={`collab-${selected.id}`}
                   audioUrl={selected.audioUrl}
-                  seed={selected.artist.length * 17 + selected.year}
+                  seed={selected.artist.length * 17 + (selected.year ?? 0)}
                   className="mt-6"
                 />
                 <button

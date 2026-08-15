@@ -31,7 +31,7 @@ export function CollabTile({ collab, index, onHover, onSelect }: CollabTileProps
       <div className="absolute inset-0 opacity-30 mix-blend-overlay bg-grain" />
       <div className="absolute inset-0 flex flex-col justify-end p-4">
         <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-ivoire/50">
-          {collab.year} · {collab.role}
+          {[collab.year, collab.role].filter(Boolean).join(" · ")}
         </p>
         <p className="mt-1 font-display text-base font-semibold text-ivoire">{collab.artist}</p>
         <p className="text-sm text-ivoire/70">{collab.track}</p>

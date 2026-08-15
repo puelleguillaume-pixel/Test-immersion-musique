@@ -37,7 +37,7 @@ export interface Collab {
   id: string;
   artist: string;
   track: string;
-  year: number;
+  year?: number;
   role: string;
   accent: [string, string];
   geniusUrl?: string;

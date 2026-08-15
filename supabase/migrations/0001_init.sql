@@ -27,7 +27,7 @@ create table if not exists collabs (
   id uuid primary key default gen_random_uuid(),
   artist text not null,
   track text not null,
-  year integer not null,
+  year integer,
   role text not null,
   accent text[] not null default '{}',
   genius_url text,
