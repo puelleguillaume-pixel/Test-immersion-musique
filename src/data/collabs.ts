@@ -89,6 +89,32 @@ export const collabs: Collab[] = [
   },
 ];
 
+interface CollabRow {
+  id: string;
+  artist: string;
+  track: string;
+  year: number | null;
+  role: string;
+  accent: string[];
+  genius_url: string | null;
+  audio_url: string | null;
+  verified: boolean;
+}
+
+function rowToCollab(row: CollabRow): Collab {
+  return {
+    id: row.id,
+    artist: row.artist,
+    track: row.track,
+    year: row.year ?? undefined,
+    role: row.role,
+    accent: [row.accent[0] ?? "#5b6b82", row.accent[1] ?? "#08070a"],
+    geniusUrl: row.genius_url ?? undefined,
+    audioUrl: row.audio_url ?? undefined,
+    verified: row.verified,
+  };
+}
+
 export async function getCollabs(): Promise<Collab[]> {
   if (!supabase) return collabs;
   const { data, error } = await supabase
@@ -96,5 +122,5 @@ export async function getCollabs(): Promise<Collab[]> {
     .select("*")
     .order("year", { ascending: false, nullsFirst: false });
   if (error || !data || data.length === 0) return collabs;
-  return data as unknown as Collab[];
+  return (data as CollabRow[]).map(rowToCollab);
 }

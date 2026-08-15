@@ -1,38 +1,6 @@
-import type { License, Pack } from "@/types";
+import type { Pack } from "@/types";
 import { supabase } from "@/lib/supabase";
-
-function licenseSet(base: number, id: string): License[] {
-  return [
-    {
-      id: `${id}-mp3`,
-      label: "MP3 Lease",
-      format: "MP3",
-      price: base,
-      description: "Usage non exclusif, streaming & clips jusqu'à 50k vues, tag audio inclus.",
-    },
-    {
-      id: `${id}-wav`,
-      label: "WAV Lease",
-      format: "WAV",
-      price: Math.round(base * 1.8),
-      description: "Qualité studio sans tag, distribution illimitée en streaming.",
-    },
-    {
-      id: `${id}-trackout`,
-      label: "Trackout",
-      format: "TRACKOUT",
-      price: Math.round(base * 3.4),
-      description: "Toutes les pistes séparées (stems) pour un mix/mastering sur-mesure.",
-    },
-    {
-      id: `${id}-exclusive`,
-      label: "Exclusivité",
-      format: "EXCLUSIVE",
-      price: Math.round(base * 9),
-      description: "Droits exclusifs, retrait immédiat de la vente, contrat cédé.",
-    },
-  ];
-}
+import { licensesFromBasePrice } from "@/lib/catalogue";
 
 export const packs: Pack[] = [
   {
@@ -46,7 +14,7 @@ export const packs: Pack[] = [
     coverGradient: ["#b3161c", "#08070a"],
     durationSec: 138,
     waveformSeed: 14,
-    licenses: licenseSet(35, "p1"),
+    licenses: licensesFromBasePrice(35, "p1"),
     tags: ["piano", "trap", "cinématique"],
     createdAt: "2026-06-02",
   },
@@ -61,7 +29,7 @@ export const packs: Pack[] = [
     coverGradient: ["#5b6b82", "#111014"],
     durationSec: 46,
     waveformSeed: 27,
-    licenses: licenseSet(22, "p2"),
+    licenses: licensesFromBasePrice(22, "p2"),
     tags: ["piano loop", "boom bap"],
     createdAt: "2026-05-18",
   },
@@ -76,7 +44,7 @@ export const packs: Pack[] = [
     coverGradient: ["#e21f26", "#18161c"],
     durationSec: 152,
     waveformSeed: 8,
-    licenses: licenseSet(38, "p3"),
+    licenses: licensesFromBasePrice(38, "p3"),
     tags: ["drill", "piano", "dark"],
     createdAt: "2026-07-01",
   },
@@ -91,7 +59,7 @@ export const packs: Pack[] = [
     coverGradient: ["#8a97ab", "#08070a"],
     durationSec: 164,
     waveformSeed: 41,
-    licenses: licenseSet(45, "p4"),
+    licenses: licensesFromBasePrice(45, "p4"),
     tags: ["topline", "mélodie chantée"],
     createdAt: "2026-06-27",
   },
@@ -106,7 +74,7 @@ export const packs: Pack[] = [
     coverGradient: ["#b3161c", "#5b6b82"],
     durationSec: 145,
     waveformSeed: 55,
-    licenses: licenseSet(40, "p5"),
+    licenses: licensesFromBasePrice(40, "p5"),
     tags: ["trap", "orchestral", "piano"],
     createdAt: "2026-04-30",
   },
@@ -121,7 +89,7 @@ export const packs: Pack[] = [
     coverGradient: ["#18161c", "#5b6b82"],
     durationSec: 38,
     waveformSeed: 63,
-    licenses: licenseSet(20, "p6"),
+    licenses: licensesFromBasePrice(20, "p6"),
     tags: ["piano loop", "rnb"],
     createdAt: "2026-07-20",
   },
@@ -136,7 +104,7 @@ export const packs: Pack[] = [
     coverGradient: ["#5b6b82", "#e21f26"],
     durationSec: 129,
     waveformSeed: 19,
-    licenses: licenseSet(37, "p7"),
+    licenses: licensesFromBasePrice(37, "p7"),
     tags: ["drill", "cinématique"],
     createdAt: "2026-07-29",
   },
@@ -151,24 +119,82 @@ export const packs: Pack[] = [
     coverGradient: ["#f4efe6", "#08070a"],
     durationSec: 171,
     waveformSeed: 33,
-    licenses: licenseSet(48, "p8"),
+    licenses: licensesFromBasePrice(48, "p8"),
     tags: ["topline", "piano", "chant"],
     createdAt: "2026-08-05",
   },
 ];
 
-const BPM_MIN = Math.min(...packs.map((p) => p.bpm));
-const BPM_MAX = Math.max(...packs.map((p) => p.bpm));
-export const packBpmRange: [number, number] = [BPM_MIN, BPM_MAX];
-
-export const allMoods = Array.from(new Set(packs.flatMap((p) => p.mood)));
-export const allKeys = Array.from(new Set(packs.map((p) => p.key)));
+export const packBpmRange: [number, number] = [
+  Math.min(...packs.map((p) => p.bpm)),
+  Math.max(...packs.map((p) => p.bpm)),
+];
 
 /**
- * Supabase-first: reads from a `packs` table (see supabase/migrations) when a
- * project is configured, otherwise serves the local catalogue above so the
- * store works out of the box. New drops just need a row in Supabase — no
- * front-end change required.
+ * Supabase stores columns in snake_case (idiomatic Postgres); the app works
+ * in camelCase. These two functions are the only place that translation
+ * happens, so every read/write path (storefront + admin) stays consistent.
+ */
+interface PackRow {
+  id: string;
+  slug: string;
+  title: string;
+  type: Pack["type"];
+  bpm: number;
+  key: string;
+  mood: Pack["mood"];
+  cover_gradient: string[];
+  duration_sec: number;
+  audio_url: string | null;
+  waveform_seed: number;
+  licenses: Pack["licenses"];
+  tags: string[];
+  created_at: string;
+}
+
+function rowToPack(row: PackRow): Pack {
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    type: row.type,
+    bpm: row.bpm,
+    key: row.key,
+    mood: row.mood,
+    coverGradient: [row.cover_gradient[0] ?? "#18161c", row.cover_gradient[1] ?? "#08070a"],
+    durationSec: row.duration_sec,
+    audioUrl: row.audio_url ?? undefined,
+    waveformSeed: row.waveform_seed,
+    licenses: row.licenses,
+    tags: row.tags,
+    createdAt: row.created_at,
+  };
+}
+
+function packToRow(pack: Pack): PackRow {
+  return {
+    id: pack.id,
+    slug: pack.slug,
+    title: pack.title,
+    type: pack.type,
+    bpm: pack.bpm,
+    key: pack.key,
+    mood: pack.mood,
+    cover_gradient: pack.coverGradient,
+    duration_sec: pack.durationSec,
+    audio_url: pack.audioUrl ?? null,
+    waveform_seed: pack.waveformSeed,
+    licenses: pack.licenses,
+    tags: pack.tags,
+    created_at: pack.createdAt,
+  };
+}
+
+/**
+ * Supabase-first: reads from the `packs` table when a project is configured,
+ * otherwise serves the local catalogue above so the store works out of the
+ * box. New drops just need a row in Supabase (or the /admin catalogue
+ * manager) — no front-end change required.
  */
 export async function getPacks(): Promise<Pack[]> {
   if (!supabase) return packs;
@@ -177,5 +203,37 @@ export async function getPacks(): Promise<Pack[]> {
     .select("*")
     .order("created_at", { ascending: false });
   if (error || !data || data.length === 0) return packs;
-  return data as unknown as Pack[];
+  return (data as PackRow[]).map(rowToPack);
+}
+
+/** Requires an authenticated Supabase session (see supabase/migrations/0002). */
+export async function createPack(pack: Pack): Promise<void> {
+  if (!supabase) throw new Error("Supabase n'est pas configuré.");
+  const { error } = await supabase.from("packs").insert(packToRow(pack));
+  if (error) throw new Error(error.message);
+}
+
+export async function updatePack(pack: Pack): Promise<void> {
+  if (!supabase) throw new Error("Supabase n'est pas configuré.");
+  const { error } = await supabase.from("packs").update(packToRow(pack)).eq("id", pack.id);
+  if (error) throw new Error(error.message);
+}
+
+export async function deletePack(id: string): Promise<void> {
+  if (!supabase) throw new Error("Supabase n'est pas configuré.");
+  const { error } = await supabase.from("packs").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+/** Uploads to the public `pack-audio` storage bucket and returns its public URL. */
+export async function uploadPackAudio(packId: string, file: File): Promise<string> {
+  if (!supabase) throw new Error("Supabase n'est pas configuré.");
+  const path = `${packId}/${Date.now()}-${file.name}`;
+  const { error } = await supabase.storage.from("pack-audio").upload(path, file, {
+    upsert: true,
+    contentType: file.type || "audio/mpeg",
+  });
+  if (error) throw new Error(error.message);
+  const { data } = supabase.storage.from("pack-audio").getPublicUrl(path);
+  return data.publicUrl;
 }

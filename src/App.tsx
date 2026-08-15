@@ -13,6 +13,7 @@ const Catalogue = lazy(() => import("@/pages/Catalogue"));
 const Collabs = lazy(() => import("@/pages/Collabs"));
 const Univers = lazy(() => import("@/pages/Univers"));
 const Contact = lazy(() => import("@/pages/Contact"));
+const Admin = lazy(() => import("@/pages/Admin"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 function RouteFallback() {
@@ -44,6 +45,7 @@ export default function App() {
                 <Route path="/collabs" element={<Collabs />} />
                 <Route path="/univers" element={<Univers />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/admin" element={<Admin />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </PageTransition>

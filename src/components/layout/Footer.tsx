@@ -52,6 +52,9 @@ export function Footer() {
       <div className="mt-16 flex flex-col items-start justify-between gap-4 border-t border-ivoire/10 pt-6 text-xs text-brume-soft sm:flex-row sm:items-center">
         <p>© {new Date().getFullYear()} Naifos. Tous droits réservés.</p>
         <p className="font-mono">90 BPM · piano en reflet</p>
+        <Link to="/admin" className="hover:text-cuir-bright">
+          Espace artiste
+        </Link>
       </div>
     </footer>
   );

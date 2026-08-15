@@ -52,10 +52,39 @@ Voir `.env.example`. Rien n'est obligatoire pour développer en local :
 `supabase/migrations/0001_init.sql` crée les tables `packs`, `collabs`, `orders`, `order_items`,
 `contact_messages` avec RLS (lecture publique sur `packs`/`collabs`, écriture réservée au rôle
 service — utilisé par le webhook Apps Script ou une edge function, jamais depuis le client).
+`supabase/migrations/0002_admin_catalogue.sql` ajoute les policies d'écriture pour l'espace
+artiste (voir ci-dessous) et crée le bucket de stockage `pack-audio`.
 
-Pour ajouter un nouveau pack/collab : une ligne dans la table Supabase suffit, aucun changement
-front nécessaire (`getPacks()` / `getCollabs()` retombent sur les seeds locales uniquement si
-Supabase n'est pas configuré ou renvoie une liste vide).
+Pour ajouter un nouveau pack : soit une ligne dans la table Supabase, soit — plus simple —
+directement depuis `/admin` une fois le projet connecté. `getPacks()` / `getCollabs()` retombent
+sur les seeds locales uniquement si Supabase n'est pas configuré ou renvoie une liste vide.
+
+## Espace artiste (`/admin`)
+
+Page de gestion du catalogue en libre-service, pour que Naifos ajoute/modifie/supprime ses packs
+(prix inclus) et dépose ses fichiers audio sans toucher au code. Lien discret en bas de page
+("Espace artiste"), protégé par Supabase Auth.
+
+**Mise en service (une fois) :**
+
+1. Crée un projet Supabase, renseigne `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`.
+2. Applique les deux migrations SQL (`supabase/migrations/0001_init.sql` puis `0002_admin_catalogue.sql`) — via le SQL Editor du tableau de bord Supabase, ou la CLI Supabase.
+3. **Désactive les inscriptions publiques** : Authentication → Providers → Email → décocher
+   "Allow new users to sign up". Les policies d'écriture du catalogue autorisent n'importe quel
+   compte authentifié — sans cette étape, n'importe qui pourrait s'inscrire et modifier le
+   catalogue.
+4. Crée le compte de l'artiste : Authentication → Users → Add user (email + mot de passe).
+5. Va sur `/admin`, connecte-toi. Le catalogue Supabase est vide au départ — les 8 packs de
+   démo restent visibles tant qu'aucune ligne n'existe dans la table `packs` (comportement de
+   secours habituel), donc la première étape sur `/admin` est d'ajouter les vrais packs.
+
+**Utilisation :** "Nouveau pack" ouvre un formulaire — titre, type, BPM, tonalité, mood, tags,
+deux couleurs de cover, fichier audio (upload direct vers Supabase Storage, durée détectée
+automatiquement), et le prix des 4 licences (MP3/WAV/Trackout/Exclusivité) modifiable
+individuellement. "Modifier" sur un pack existant réutilise le même formulaire ; "Supprimer"
+demande une confirmation. Les filtres du catalogue public (mood, tonalité, BPM) se recalculent
+automatiquement à partir de ce qui existe réellement, donc un pack ajouté avec un nouveau mood
+ou un nouveau BPM est immédiatement filtrable sans toucher au code.
 
 ## ⚠️ Données de démonstration restantes
 
@@ -68,12 +97,13 @@ plutôt que deviné (le champ est optionnel, l'UI l'affiche seulement quand il e
 *"BESOIN DE TOI"* (feat. FAYV) est marqué *(Non publié)* sur Genius et n'a délibérément pas été
 ajouté — à inclure quand l'artiste décide de l'annoncer.
 
-Restent en placeholder : `src/data/gallery.ts` (dégradés de couleur en attendant de vraies
-photos studio/scène/portraits) et les `audioUrl` des packs du catalogue (vides — brancher
-Supabase Storage ou tout CDN audio pour activer la lecture réelle ; sans URL, chaque lecteur
-affiche un aperçu visuel généré et le bouton play reste désactivé plutôt que de mentir sur le
-contenu). Le mur des collabs a aussi ce comportement : sans `audioUrl` par morceau, le
-mini-player s'ouvre mais la lecture reste désactivée.
+Reste en placeholder : `src/data/gallery.ts` (dégradés de couleur en attendant de vraies photos
+studio/scène/portraits). Les packs du catalogue de démo (`src/data/packs.ts`) n'ont pas de
+fichier audio — une fois `/admin` en service (voir plus bas), l'upload s'y fait directement ; en
+attendant, chaque lecteur affiche un aperçu visuel généré et le bouton play reste désactivé
+plutôt que de mentir sur le contenu. Le mur des collabs a le même comportement : sans `audioUrl`
+par morceau (pas encore gérable depuis `/admin`, à ajouter en base si besoin), le mini-player
+s'ouvre mais la lecture reste désactivée.
 
 ## Structure
 
@@ -86,10 +116,12 @@ src/
     collabs/     mur des collabs
     about/       galerie photo
     contact/     formulaire de booking
+    admin/       espace artiste — connexion + formulaire de gestion du catalogue
     layout/      navbar, footer, curseur custom, toggle son, transitions de page
-  pages/         Home, Catalogue, Collabs, Univers, Contact, NotFound
-  data/          seeds + accès Supabase-first pour packs/collabs/galerie
-  lib/           supabase client, checkout/contact webhooks, synthé piano, tempo partagé
+  pages/         Home, Catalogue, Collabs, Univers, Contact, Admin, NotFound
+  data/          seeds + accès Supabase-first (lecture + écriture) pour packs/collabs/galerie
+  lib/           supabase client, checkout/contact webhooks, synthé piano, tempo partagé, slugify
+  hooks/         useAuth (session Supabase), useDeviceTier, usePrefersReducedMotion
   state/         panier (Zustand + localStorage), préférences audio
 ```
 

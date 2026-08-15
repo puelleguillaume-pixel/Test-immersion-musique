@@ -4,12 +4,7 @@ import type { Pack } from "@/types";
 import { WaveformPlayer } from "./WaveformPlayer";
 import { LicenseModal } from "./LicenseModal";
 import { beats, grooveEase } from "@/lib/tempo";
-
-const TYPE_LABEL: Record<Pack["type"], string> = {
-  loop: "Loop",
-  prod: "Prod",
-  topline: "Topline",
-};
+import { PACK_TYPE_LABEL } from "@/lib/catalogue";
 
 export function PackCard({ pack, index }: { pack: Pack; index: number }) {
   const [licenseOpen, setLicenseOpen] = useState(false);
@@ -49,7 +44,7 @@ export function PackCard({ pack, index }: { pack: Pack; index: number }) {
           </motion.div>
 
           <span className="relative rounded-full border border-ivoire/30 bg-noir/40 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-ivoire backdrop-blur">
-            {TYPE_LABEL[pack.type]}
+            {PACK_TYPE_LABEL[pack.type]}
           </span>
         </div>
 

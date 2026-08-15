@@ -2,12 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import { Section } from "@/components/ui/Section";
 import { FiltersBar, type Filters } from "@/components/catalogue/FiltersBar";
 import { PackCard } from "@/components/catalogue/PackCard";
-import { getPacks, allMoods, packBpmRange } from "@/data/packs";
+import { getPacks, packBpmRange } from "@/data/packs";
+import { MOOD_OPTIONS } from "@/lib/catalogue";
 import type { Pack } from "@/types";
 
 const INITIAL_FILTERS: Filters = {
   type: "all",
   mood: "all",
+  key: "all",
   bpmMin: packBpmRange[0],
   bpmMax: packBpmRange[1],
   search: "",
@@ -18,14 +20,38 @@ export default function Catalogue() {
   const [filters, setFilters] = useState<Filters>(INITIAL_FILTERS);
 
   useEffect(() => {
-    void getPacks().then(setPacks);
+    void getPacks().then((loaded) => {
+      setPacks(loaded);
+      if (loaded.length > 0) {
+        const bpms = loaded.map((p) => p.bpm);
+        setFilters((f) => ({ ...f, bpmMin: Math.min(...bpms), bpmMax: Math.max(...bpms) }));
+      }
+    });
   }, []);
+
+  // Filter options are derived from whatever is actually in the catalogue
+  // (seed data or a real Supabase project) rather than hardcoded, so a pack
+  // added through /admin with a new mood or BPM is immediately filterable.
+  const moods = useMemo(
+    () => (packs && packs.length > 0 ? Array.from(new Set(packs.flatMap((p) => p.mood))) : MOOD_OPTIONS),
+    [packs],
+  );
+  const keys = useMemo(
+    () => (packs ? Array.from(new Set(packs.map((p) => p.key))).sort() : []),
+    [packs],
+  );
+  const bpmRange: [number, number] = useMemo(() => {
+    if (!packs || packs.length === 0) return packBpmRange;
+    const bpms = packs.map((p) => p.bpm);
+    return [Math.min(...bpms), Math.max(...bpms)];
+  }, [packs]);
 
   const filtered = useMemo(() => {
     if (!packs) return [];
     return packs.filter((p) => {
       if (filters.type !== "all" && p.type !== filters.type) return false;
       if (filters.mood !== "all" && !p.mood.includes(filters.mood)) return false;
+      if (filters.key !== "all" && p.key !== filters.key) return false;
       if (p.bpm > filters.bpmMax) return false;
       if (filters.search) {
         const q = filters.search.toLowerCase();
@@ -42,7 +68,7 @@ export default function Catalogue() {
       title="Catalogue"
       description="Loops, prods & toplines — licences MP3, WAV, trackout ou exclusivité."
     >
-      <FiltersBar filters={filters} onChange={setFilters} moods={allMoods} bpmRange={packBpmRange} />
+      <FiltersBar filters={filters} onChange={setFilters} moods={moods} keys={keys} bpmRange={bpmRange} />
 
       {!packs ? (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
