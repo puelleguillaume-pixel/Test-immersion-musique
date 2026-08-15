@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  body {
+    background-color: #08070a;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: #e21f26;
+    color: #f4efe6;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #08070a;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #2a2730;
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #b3161c;
+  }
+}
+
+@layer utilities {
+  .grain-overlay {
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background-image: theme("backgroundImage.grain");
+    mix-blend-mode: overlay;
+    opacity: 0.5;
+  }
+
+  .text-outline {
+    -webkit-text-stroke: 1px rgba(244, 239, 230, 0.6);
+    color: transparent;
+  }
+
+  .clip-shard {
+    clip-path: polygon(4% 0, 100% 0, 96% 100%, 0 100%);
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* custom cursor hidden on touch */
+@media (hover: hover) and (pointer: fine) {
+  .cursor-ready {
+    cursor: none;
+  }
+}
